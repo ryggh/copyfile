@@ -1,0 +1,714 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{textcomp}
+\usepackage{stfloats}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{cite}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+% updated with editorial comments 8/9/2021
+
+\begin{document}
+
+\title{An Adaptive Task Offloading Strategy \\ for Vehicle-Edge Collaborative}
+
+\author{IEEE Publication Technology,~\IEEEmembership{Staff,~IEEE,}
+        % <-this % stops a space
+\thanks{This paper was produced by the IEEE Publication Technology Group. They are in Piscataway, NJ.}% <-this % stops a space
+\thanks{Manuscript received April 19, 2021; revised August 16, 2021.}}
+
+% The paper headers
+\markboth{Journal of \LaTeX\ Class Files,~Vol.~14, No.~8, August~2021}%
+{Shell \MakeLowercase{\textit{et al.}}: An Adaptive Task Offloading Strategy for Vehicle-Edge Collaborative}
+
+\IEEEpubid{0000--0000/00\$00.00~\copyright~2021 IEEE}
+% Remember, if you use this you must call \IEEEpubidadjcol in the second
+% column for its text to clear the IEEEpubid mark.
+
+\maketitle
+
+\begin{abstract}
+Due to the limited computing resources and coverage of the edge server, it will delay the task completion time and affect the user experience when there is a surge of vehicle task offloading requests or the vehicle is not in the coverage of the edge server. However, some of the vehicles may have idle resources under the premise of meeting their own needs, and there are load imbalances among the edge servers, resulting in a waste of resources. To address the issue, we propose an adaptive task offloading strategy for vehicle-edge collaboration environment, which tries to improve task offloading efficiency and reduce task completion time. Firstly, according to the communication range of vehicle and edge server, considering the collaboration relationship among vehicles and edge servers, a task offloading model in the vehicle-edge collaboration environment is constructed with the goal of minimizing the task completion time. Secondly, an adaptive task offloading strategy is designed based on the vehicle location. When the vehicle is outside the coverage of edge servers, an optimal auxiliary vehicle selection algorithm (VSA) is proposed to offload tasks to the optimal auxiliary vehicles through the collaboration among vehicles. When the vehicle is within the coverage range of the edge server, a task scheduling algorithm based on hybrid differential teaching optimization is proposed to offload the task to the optimal edge server through the collaboration among edge servers. Finally, simulation experiments are designed to verify the effectiveness of the proposed task offloading strategy comparing with existing methods. 
+\end{abstract}
+
+\begin{IEEEkeywords}
+Edge computing, Internet of vehicles, Task offloading, Teaching optimization
+\end{IEEEkeywords}
+
+\section{Introduction}
+\IEEEPARstart{W}{ith} the rapid development of technologies such as wireless communication and artificial intelligence, the level of intelligence in vehicles is increasing, promoting the advancement of Internet of Vehicles (IoV) systems. In IoV systems, the computing demands for intelligent services such as autonomous driving, real-time navigation, and infotainment are rapidly escalating, with stricter requirements for low latency\cite{1}. In the future, sixth-generation wireless communication technology will provide strong support for IoV’s V2X (Vehicle-to-Everything) communication, which not only enables more advanced applications in IoV but also presents significant challenges for resource-limited intelligent vehicles \cite{2}.
+
+In recent years, many studies have focused on task offloading techniques in IoV systems, aiming to offload tasks that are difficult or costly for vehicles to process onto cloud centers, thereby improving task execution efficiency \cite{2,3,4,5}. However, for latency-sensitive tasks in IoV systems, traditional cloud-based task offloading can no longer meet the real-time requirements of intelligent vehicle applications. In contrast, deploying low-cost edge servers near users is an effective computation offloading solution.
+
+In the new generation of IoV technology, deploying edge servers at base stations or roadside units can significantly reduce round-trip latency in data transmission, ensuring real-time responses to user requests \cite{6,7,8,9,10,11,12,13}. However, edge server resources are often limited. When task offloading requests from vehicles surge or there is a high density of computation-intensive tasks in an area, edge server overload can occur, affecting service quality. Additionally, due to the limited coverage range of statically deployed edge servers, tasks cannot be offloaded to an edge server once a vehicle moves out of its coverage area. Meanwhile, some vehicles on the road may have idle resources available after meeting their own needs. Therefore, fully utilizing the idle resources of vehicles on the road to achieve vehicle-edge collaborative task offloading is of great research significance and value for improving task execution efficiency in IoV environments.
+
+Based on the above analysis, to make full use of the resources of vehicles and edge servers in the system and to reduce task completion time, this paper proposes an adaptive task offloading strategy in a vehicle-edge collaborative environment. This strategy adaptively selects the task offloading algorithm based on vehicle location and the communication range of edge servers to achieve optimal task offloading. When vehicles are outside the coverage range of an edge server, a best-service vehicle selection algorithm is proposed to utilize vehicle-to-vehicle cooperation for offloading tasks to the optimal service vehicle. When vehicles are within the edge server’s coverage range, a task scheduling algorithm based on hybrid differential teaching optimization is proposed, which considers cooperation between edge servers to offload tasks to the most suitable edge server, achieving balanced load distribution among edge servers. Finally, experimental results demonstrate that the proposed strategy can effectively reduce task completion time. The main contributions of this paper are as follows:
+
+(1)To improve task execution efficiency and fully utilize the resources within the IoV system, we consider the collaborative relationship between vehicles and edge servers. With the objective of minimizing task completion time, we have established a task offloading model in a vehicle-edge collaborative environment and designed an adaptive task offloading strategy based on vehicle location.
+
+(2)When a vehicle is outside the coverage area of an edge server, a best-service vehicle selection algorithm is proposed, which offloads tasks to the optimal service vehicle through cooperation between vehicles. To ensure task latency and stability of inter-vehicle communication, the algorithm considers only idle vehicle resources within a certain range and establishes a service vehicle task waiting queue to ensure orderly task execution.
+
+(3)When a vehicle is within the coverage area of an edge server, a task scheduling algorithm based on hybrid differential teaching optimization is proposed. This algorithm considers cooperation between edge servers and, based on the KKT conditions, obtains the optimal location and proportion for task offloading to the edge server. This achieves load balancing among edge servers and reduces task completion time.
+
+\section{related work}
+In recent years, significant research has been conducted on vehicle task offloading in vehicle edge computing (VEC) environments. For example, Liu et al. \cite{6} proposed a dependency-aware task offloading scheme for collaborative computing among vehicles, edges, and clouds to obtain optimal offloading decisions. Zhang et al. \cite{7} proposed a new task offloading method based on a simulated annealing mechanism, considering the current road density. Zhu et al. \cite{8} proposed a distributed power allocation scheme to optimize energy consumption and latency in the VEC environment, taking into account the randomness of task arrivals, uncertainty of channel conditions, and vehicle mobility. Huang et al. \cite{9} used greedy algorithms, simulated annealing, and heuristic rules to determine the optimal task offloading location and execution order on edge servers. Qian et al. \cite{10} considered multiple indicators such as task acceptance rate, task completion rate, average completion time, and computing resource utilization and proposed a fine-grained algorithm to complete task scheduling within edge servers. Hossain et al. \cite{11} proposed a dynamic task offloading algorithm based on non-cooperative game theory to offload tasks to edge or cloud servers, maximizing benefits while reducing task execution time and failure rates. Tang et al. \cite{12} designed new computing and communication models to optimize the average response time of applications in VEC. Zhu et al. \cite{13} proposed a task offloading decision scheme based on an improved non-dominated sorting genetic algorithm for the task offloading decision problem in intelligent transportation cloud-edge-end collaborative computing scenarios. All these studies leverage edge server cooperation to complete vehicle task offloading. In our previous research \cite{14}, we also explored task scheduling in edge-cooperative environments. Although edge servers can improve task offloading efficiency in IoV environments, as offloading requests increase, limited edge server resources may lead to load imbalances among servers, which can decrease task execution efficiency. Additionally, edge servers have limited coverage areas, so vehicles outside the coverage area cannot offload tasks to the edge server, affecting user experience. Therefore, considering both edge server and vehicle computing resources is of great significance for improving task offloading in IoV.
+
+In VEC environments, in addition to edge server computing resources, some vehicles on the road may have idle resources after meeting their own needs. Using these idle resources to assist edge servers can help improve task offloading efficiency. Due to the mobility of vehicles, the time that vehicles stay within the coverage area of roadside units (RSUs) is limited. When vehicles move out of the RSU communication range, tasks can no longer be directly offloaded to edge servers, impacting service quality. Ming et al. \cite{15} proposed a dynamic, adaptive distributed and centralized deep reinforcement learning method to use both vehicles and edge servers as computing service nodes to respond to different task demands and reduce system latency. Chen et al. \cite{16} used nearby RSUs and vehicles to provide edge computing services, employing game theory concepts to incentivize nearby vehicles to share computing resources, ensuring vehicle safety and minimizing task latency. Gong et al. \cite{17} proposed a stepwise computing offloading algorithm that decomposes applications into dependent subtasks to minimize the time interval between task offloading and task execution. Li et al. \cite{18} proposed a new scalable modulation-based task offloading strategy, selecting the optimal moving vehicle as a relay node to assist in offloading tasks to the edge server based on the current network topology, thereby minimizing energy consumption while ensuring latency and transmission quality. To reduce latency in intelligent vehicular networks, Pang et al. \cite{19} proposed a relay vehicle selection and reputation management algorithm to choose reliable relay vehicles while managing vehicle trustworthiness. Zhang et al. \cite{20} addressed potential trust issues among vehicles in V2V and V2I communication, proposing a reputation management system based on an improved three-valued subjective logic algorithm for inter-vehicle reputation management, using blockchain technology to ensure information security in vehicular networks. The above studies use vehicle computing or communication resources to assist in task offloading but do not fully consider factors such as vehicle location, speed, and direction. Additionally, multi-hop transmission among vehicles in dynamic mobile environments poses certain risks, and further research is needed on how to ensure communication stability and improve task offloading efficiency.
+
+Unlike the above studies, this paper further improves task execution efficiency by considering both edge collaboration and inter-vehicle collaboration. It proposes an adaptive task offloading algorithm in a vehicle-edge collaborative environment, making optimal task offloading decisions based on the resources of both vehicles and edge servers.
+
+\section{Vehicle-Edge Collaborative \\ Task Offloading Model}
+This paper considers a scenario where vehicles are traveling on a highway, as shown in Fig. \ref{fig_1}. It is assumed that $K$ RSUs (Roadside Units) are evenly distributed along the roadside, with each RSU equipped with a mobile edge server (MEC) via a wired link. The set of RSUs is denoted as $M=\left\{ {{M}_{1}},{{M}_{2}},\ldots ,{{M}_{K}} \right\}$, and the distance between adjacent RSUs along the roadside is represented as . Vehicles travel freely on a two-way road and are categorized into request vehicles (RV) and service vehicles (SV). It is assumed that request vehicles generate computation-intensive tasks, while service vehicles, in addition to completing their own tasks, have idle resources available, meaning they have spare resources for use after meeting their own needs. The set of request vehicles is denoted as $S=\left\{ {{S}_{1}},{{S}_{2}},\ldots ,{{S}_{N}} \right\}$, and the computational resources of vehicle ${{S}_{i}}$ are denoted as ${{f}_{i}}$. Each vehicle generates tasks following a Poisson distribution with a parameter $\lambda$. A computation task is represented as ${{X}_{i}}=\left\{ {{c}_{i}},{{d}_{i}} \right\}$, where ${{c}_{i}}$ denotes the number of CPU cycles required per bit of data, and ${{d}_{i}}$ denotes the data size of the generated task. The variable ${{\delta }_{i}}\left( 0\le {{\delta }_{i}}\le 1 \right)$ is defined as the proportion of the task offloaded to other nodes for execution. The $\left( 1-{{\delta }_{i}} \right){{d}_{i}}$ portion of task ${{X}_{i}}$ is processed locally, while the remaining portion can be offloaded to an edge server or a service vehicle. However, the same task cannot be offloaded to both the edge server and a service vehicle simultaneously.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=2.5in]{fig/fig1.png}
+\caption{Vehicle-Edge Collaborative Task Offloading Architecture.}
+\label{fig_1}
+\end{figure}
+
+\subsection{Communication Model}
+
+\textbf{V2R (Vehicle to RSU) Communication Model:} When a vehicle is within the coverage range of an RSU, the vehicle’s information is automatically collected by the RSU, and tasks are offloaded to the RSU through a Vehicle-to-Infrastructure (V2R) communication link. Assuming $W_i$ is the bandwidth resource allocated by the RSU to vehicle $i$, the transmission rate of the communication link between the vehicle and RSU can be expressed as:
+
+\begin{equation}
+R_{i}^{RSU}={{W}_{i}}{{\log }_{2}}\left( 1+\frac{{{p}_{i}}{{\left| h \right|}^{2}}}{{{\mu }_{0}}{{\left( {{d}_{{{s}_{i}},RSU}} \right)}^{\vartheta }}} \right)
+\end{equation}
+
+where ${{p}_{i}}$ denotes the transmission power of the vehicle, $h$ is the channel gain between the vehicle and RSU, ${{d}_{{{s}_{i}},RSU}}$ represents the distance between the vehicle and RSU, $\vartheta$ is the path loss exponent, and ${{\mu }_{0}}$ represents Gaussian white noise power.
+
+Assuming that at time $t$, the position of request vehicle ${{S}_{i}}$ is $(S_{i}^{x}, S_{i}^{y})$, and the coverage radius of the edge server is ${{d}_{MEC}}$, the vehicle ${{S}_{i}}$ is considered to be within the RSU’s communication range and can establish a V2R communication link when ${{d}_{{{s}_{i}},RSU}} \leq {{d}_{MEC}}$. ${{d}_{{{s}_{i}},RSU}}$ can be represented as:
+
+\begin{equation}
+{{d}_{{{s}_{i}},RSU}}=\sqrt{{{\left( S_{i}^{x}-M_{k}^{x} \right)}^{2}}+{{\left( S_{i}^{y}-M_{k}^{y} \right)}^{2}}}
+\end{equation}
+
+\textbf{V2V (Vehicle to Vehicle) Communication Model:} When a request vehicle needs to offload a task to a service vehicle, there is a connection delay prior to data transmission to complete information broadcasting and establish the connection, typically treated as a constant. Assuming the total bandwidth of the service vehicle is $W$, and that the request vehicles equally share the bandwidth during data transmission, the transmission rate between request vehicle ${{S}_{i}}$ and service vehicle ${{S}_{j}}$ can be expressed as:
+
+\begin{equation}
+R_{i}^{j}=\left( \frac{W}{{m}_{j}} \right){{\log }_{2}}\left( 1+\frac{{{p}_{i}}{{\left| h \right|}^{2}}}{{{\mu }_{0}}{{\left( {{d}_{{{S}_{i}},{{S}_{j}}}} \right)}^{\vartheta }}} \right)
+\end{equation}
+
+where ${{m}_{j}}$ is the number of request vehicles choosing to offload tasks to service vehicle ${{S}_{j}}$, and ${{d}_{{{S}_{i}},{{S}_{j}}}}$ is the distance between request vehicle ${{S}_{i}}$ and service vehicle ${{S}_{j}}$. The communication range of request vehicles is ${{d}_{VEH}}$, and a V2V communication link can be established between the vehicles when ${{d}_{{{S}_{i}},{{S}_{j}}}} \leq {{d}_{VEH}}$. ${{d}_{{{S}_{i}},{{S}_{j}}}}$ is represented as:
+
+\begin{equation}
+{{d}_{{{S}_{i}},{{S}_{j}}}}=\sqrt{{{\left( S_{i}^{x}-S_{j}^{x} \right)}^{2}}+{{\left( S_{i}^{y}-S_{j}^{y} \right)}^{2}}}
+\end{equation}
+
+The connection duration $T_{{{S}_{i}},{{S}_{j}}}^{con}$ between request vehicle ${{S}_{i}}$ and service vehicle ${{S}_{j}}$ can be expressed as:
+
+\begin{equation}
+T_{{{S}_{i}},{{S}_{j}}}^{con}=\frac{{{d}_{VEH}}-a{{d}_{{{S}_{i}},{{S}_{j}}}}}{\left| {{v}_{{{S}_{i}}}}-b{{v}_{{{S}_{j}}}} \right|}
+\end{equation}
+
+where ${{v}_{{{S}_{i}}}}$ and ${{v}_{{{S}_{j}}}}$ represent the current speeds of request vehicle ${{S}_{i}}$ and service vehicle ${{S}_{j}}$, respectively. Based on the position and speed of the vehicles, there are four possible cases: $a=1, b=1$ indicates that ${{S}_{i}}$ and ${{S}_{j}}$ are moving in the same direction, with the lead vehicle moving faster; $a=-1, b=1$ indicates they are moving in the same direction, with the trailing vehicle moving faster; $a=1, b=-1$ indicates they have passed each other and are now moving in opposite directions; $a=-1, b=-1$ indicates they are moving in opposite directions and have not yet passed each other.
+
+
+
+\subsection{Computation Model}
+
+\textbf{Local computation time}: Assume that the task offloading ratio for vehicle $S_{i}$ is $\delta_{i}$, and the local execution speed is $f_{i}^{loc}$. The local execution time of task $X_{i}$ can be expressed as:
+\begin{equation}
+t_{i}^{loc} = \frac{\left( 1 - \delta_{i} \right) d_{i} c_{i}}{f_{i}^{loc}} 
+\end{equation}
+
+\textbf{Service vehicle computation time}: Considering that onboard computing resources are limited and cannot handle tasks in parallel, tasks offloaded to service vehicle $S_{j}$ need to enter a waiting queue for execution. The task will only be processed once the previous task is completed. The execution time of task $X_{i}$ offloaded to service vehicle $S_{j}$ includes task transmission time, task waiting time, and task execution time, which can be expressed as:
+\begin{equation}
+t_{i}^{sv} = t_{j}^{wait} + t_{i}^{tran} + \frac{\delta_{i} d_{i} c_{i}}{f_{j}^{idl}}
+\end{equation}
+where $f_{j}^{idl}$ is the idle resource available for service vehicle $S_{j}$, $t_{j}^{wait}$ represents the waiting time in the queue, and $t_{i}^{tran}$ is the task transmission time.
+\begin{equation}
+t_{i}^{tran} = \frac{\delta_{i} d_{i}}{R_{i}^{j}} 
+\end{equation}
+
+During the transmission of task $X_{i}$, the local computation part can be executed first, so the local and offloaded execution are parallel. The total execution time is the maximum of both. Assuming that the execution result is small, the data return time is negligible. Therefore, the total execution time of task $X_{i}$ offloaded to the service vehicle is:
+\begin{equation} \label{9}
+t_{i} = \max \left\{ t_{i}^{loc}, t_{i}^{sv} \right\} 
+\end{equation}
+
+Since the vehicle connection time is limited, it must also ensure that $t_{i} \le T_{S_{i}, S_{j}}^{con}$, otherwise, if the communication connection is interrupted and the task execution fails, the task will be re-executed locally, leading to additional costs.
+
+\textbf{Edge server computation time}: When the user is within the coverage range of the edge server, the task can be offloaded to the edge server for execution. Since there are wired links between edge servers, tasks can be forwarded to reduce the load on the edge server and improve task execution efficiency. Therefore, when tasks are offloaded to the edge server, the execution time includes task upload time, forwarding time between edge servers, and task execution time. The computing resources allocated by the edge server to the offloaded task are $f_{i}^{RSU}$, and the total execution time of the task offloaded to the edge server is:
+\begin{equation}
+t_{i}^{RSU} = t_{i}^{up} + t_{i}^{forw} + \frac{\delta_{i} d_{i} c_{i}}{f_{i}^{RSU}} 
+\end{equation}
+
+When $d_{s_{i},RSU} \le d_{MEC}$, it indicates that the task is within the RSU coverage range and can be offloaded to the edge server. The task upload time is:
+\begin{equation}
+t_{i}^{up} = \frac{\delta_{i} d_{i}}{R_{i}^{RSU}} 
+\end{equation}
+
+Task forwarding time occurs between edge servers via wired links. $e_{i}$ represents the number of hops for task forwarding between edge servers, and the transmission rate is fixed at $R_{RSU}$. The forwarding time can be expressed as:
+\begin{equation}
+t_{i}^{forw} = \frac{e_{i} d_{i} \delta_{i}}{R_{RSU}} 
+\end{equation}
+
+Similar to offloading to service vehicles, tasks can also be executed in parallel at the local and edge servers. Therefore, the task execution time is:
+\begin{equation} \label{13}
+t_{i} = \max \left\{ t_{i}^{loc}, t_{i}^{RSU} \right\} 
+\end{equation}
+
+
+\subsection{Problem Definition}
+
+As mentioned above, the processing delay of task $X_{i}$ for request vehicle $S_{i}$ mainly consists of the maximum value between local execution time and the execution time of the offloaded portion. Assume that the task can only be offloaded to one node. Let $o_{sv} = 1$ indicate that the task is offloaded to the service vehicle for execution, and $o_{RSU} = 1$ indicate that the task is offloaded to the edge server for execution, with the constraint $o_{sv} + o_{RSU} = 1$. The execution time of task $X_{i}$ can be expressed as:
+\begin{equation}
+t_{i} = \max \left\{ t_{i}^{loc}, o_{sv} t_{i}^{sv} + o_{RSU} t_{i}^{RSU} \right\} 
+\end{equation}
+
+Therefore, the task offloading optimization problem in the vehicle-edge collaborative environment can be defined as:
+\begin{subequations}\label{eq:1}
+\begin{align}
+\min \left( \sum_{i=1}^{N} t_{i} \right) \label{eq:1a} \\
+0 \le \delta_{i} \le 1, \quad \forall i \in N  \label{eq:1b} \\
+0 \le f_{i}^{RSU} \le F_{RSU}, \quad \forall i \in N \label{eq:1c} \\
+0 \le W_{i} \le W_{RSU}, \quad \forall i \in N \label{eq:1d} \\
+\sum_{i=0}^{N} f_{i}^{RSU} \le F_{RSU}, \quad \forall i \in N \quad \label{eq:1e} \\
+\sum_{i=0}^{N} W_{i} \le W_{RSU}, \quad \forall i \in N \quad \label{eq:1f} \\
+o_{sv} + o_{RSU} = 1 \label{eq:1g}
+\end{align}
+\end{subequations}
+
+Constraint (\ref{eq:1b}) represents the task offloading ratio limitation. Constraints (\ref{eq:1c}) and (\ref{eq:1e}) ensure that the resources allocated by the edge server to offloaded tasks do not exceed its own computational resource limits. Constraints (\ref{eq:1d}) and (\ref{eq:1f}) ensure that the communication resources allocated to the task transmission channels by the edge server do not exceed the maximum bandwidth limit. Constraint (\ref{eq:1g}) ensures that at any given time, a task can only be offloaded to either the service vehicle or the edge server for execution.
+
+\section{Adaptive Task Offloading Strategy}
+
+According to constraint (\ref{eq:1g}), problem (\ref{eq:1a}) can be transformed into:
+\begin{equation} \label{16}
+ t_{i} = \min\left\{ \max\{t_{i}^{loc}, t_{i}^{sv}\}, \max\{t_{i}^{loc}, t_{i}^{RSU}\} \right\}
+\end{equation}
+Problem (\ref{16}) involves selecting the node with the minimum task execution delay for offloading. This can be solved by solving problems (\ref{9}) and (\ref{13}) separately. For the former, when the vehicle is outside the edge server's coverage range, this paper proposes an optimal service vehicle selection algorithm to ensure communication stability while minimizing task execution time. For the latter, this paper proposes a task scheduling algorithm based on hybrid differential evolution optimization, which determines the task offloading ratio and the offloading location. The resource allocation ratio for the offloaded task by the edge server is obtained using the Karush-Kuhn-Tucker (KKT) conditions. The two algorithms are iteratively solved alternately to ultimately obtain the optimal offloading decision.
+
+\subsection{Optimal Service Vehicle Selection Algorithm}
+
+Through analysis, it is known that when \( t_{i}^{loc} = t_{i}^{sv} \), the task execution time is minimized. Based on this, the task offloading ratio can be obtained as follows:
+\begin{equation}
+   \frac{(1-\delta_{i})d_{i}c_{i}}{f_{i}^{loc}} = \frac{\delta_{i}d_{i}c_{i}}{f_{j}^{idl}} + t_{j}^{wait} + \frac{\delta_{i}d_{i}}{R_{i}^{j}}
+\end{equation}
+
+where \( t_{j}^{wait} \) is the waiting time before the task starts executing on the current service vehicle.
+
+The task offloading ratio \( \delta_{i} \) is derived as:
+\begin{equation} \label{18}
+   \delta_{i} = \frac{\frac{d_{i}c_{i}}{f_{i}^{loc}} - t_{j}^{wait}}{\frac{d_{i}c_{i}}{f_{i}^{loc}} + \frac{d_{i}c_{i}}{f_{j}^{idl}} + \frac{d_{i}}{R_{i}^{j}}}
+\end{equation}
+
+All vehicles can be categorized into request vehicles and service vehicles. The latter, in addition to handling local computation tasks, has some idle resources available. Therefore, request vehicles can offload tasks to service vehicles for execution. Due to the limited onboard computing resources, which are not conducive to resource allocation functions, tasks offloaded to service vehicles must first enter a waiting queue, awaiting the completion of earlier tasks, as shown in Fig. \ref{fig_2}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=2.5in]{fig/fig2.png}
+\caption{Task execution waiting queue on service vehicle.}
+\label{fig_2}
+\end{figure}
+
+Additionally, vehicles are moving at high speeds on the road and may also be traveling in opposite directions. The communication range of vehicles is very limited, and the stability of the V2V communication connection is crucial. Therefore, this paper only considers service vehicles within the one-hop range of the requesting vehicle. The task offloading ratio is calculated based on equation (\ref{18}) to obtain both the local execution time and the service vehicle's execution time. Then, the maximum connection time between the requesting vehicle and the service vehicle is estimated, and under the constraint of connection time, the service vehicle with the lowest execution delay is selected.
+
+\textbf{Best Service Vehicle Selection Algorithm (VSA)} is shown in Algorithm 1.
+
+\begin{algorithm}[H]
+\caption{Weighted Tanimoto ELM.}\label{alg:alg1}
+\begin{algorithmic}
+\STATE 
+\STATE {\textsc{TRAIN}}$(\mathbf{X} \mathbf{T})$
+\STATE \hspace{0.5cm}$ \textbf{select randomly } W \subset \mathbf{X}  $
+\STATE \hspace{0.5cm}$ N_\mathbf{t} \gets | \{ i : \mathbf{t}_i = \mathbf{t} \} | $ \textbf{ for } $ \mathbf{t}= -1,+1 $
+\STATE \hspace{0.5cm}$ B_i \gets \sqrt{ \textsc{max}(N_{-1},N_{+1}) / N_{\mathbf{t}_i} } $ \textbf{ for } $ i = 1,...,N $
+\STATE \hspace{0.5cm}$ \hat{\mathbf{H}} \gets  B \cdot (\mathbf{X}^T\textbf{W})/( \mathbb{1}\mathbf{X} + \mathbb{1}\textbf{W} - \mathbf{X}^T\textbf{W} ) $
+\STATE \hspace{0.5cm}$ \beta \gets \left ( I/C + \hat{\mathbf{H}}^T\hat{\mathbf{H}} \right )^{-1}(\hat{\mathbf{H}}^T B\cdot \mathbf{T})  $
+\STATE \hspace{0.5cm}\textbf{return}  $\textbf{W},  \beta $
+\STATE 
+\STATE {\textsc{PREDICT}}$(\mathbf{X} )$
+\STATE \hspace{0.5cm}$ \mathbf{H} \gets  (\mathbf{X}^T\textbf{W} )/( \mathbb{1}\mathbf{X}  + \mathbb{1}\textbf{W}- \mathbf{X}^T\textbf{W}  ) $
+\STATE \hspace{0.5cm}\textbf{return}  $\textsc{sign}( \mathbf{H} \beta )$
+\end{algorithmic}
+\label{alg1}
+\end{algorithm}
+
+
+\section{Some Common Elements}
+\subsection{Sections and Subsections}
+Enumeration of section headings is desirable, but not required. When numbered, please be consistent throughout the article, that is, all headings and all levels of section headings in the article should be enumerated. Primary headings are designated with Roman numerals, secondary with capital letters, tertiary with Arabic numbers; and quaternary with lowercase letters. Reference and Acknowledgment headings are unlike all other section headings in text. They are never enumerated. They are simply primary headings without labels, regardless of whether the other headings in the article are enumerated. 
+
+\subsection{Citations to the Bibliography}
+The coding for the citations is made with the \LaTeX\ $\backslash${\tt{cite}} command. 
+This will display as: see \cite{ref1}.
+
+For multiple citations code as follows: {\tt{$\backslash$cite\{ref1,ref2,ref3\}}}
+ which will produce \cite{ref1,ref2,ref3}. For reference ranges that are not consecutive code as {\tt{$\backslash$cite\{ref1,ref2,ref3,ref9\}}} which will produce  \cite{ref1,ref2,ref3,ref9}
+
+\subsection{Lists}
+In this section, we will consider three types of lists: simple unnumbered, numbered, and bulleted. There have been many options added to IEEEtran to enhance the creation of lists. If your lists are more complex than those shown below, please refer to the original ``IEEEtran\_HOWTO.pdf'' for additional options.\\
+
+\subsubsection*{\bf A plain  unnumbered list}
+\begin{list}{}{}
+\item{bare\_jrnl.tex}
+\item{bare\_conf.tex}
+\item{bare\_jrnl\_compsoc.tex}
+\item{bare\_conf\_compsoc.tex}
+\item{bare\_jrnl\_comsoc.tex}
+\end{list}
+
+\subsubsection*{\bf A simple numbered list}
+\begin{enumerate}
+\item{bare\_jrnl.tex}
+\item{bare\_conf.tex}
+\item{bare\_jrnl\_compsoc.tex}
+\item{bare\_conf\_compsoc.tex}
+\item{bare\_jrnl\_comsoc.tex}
+\end{enumerate}
+
+\subsubsection*{\bf A simple bulleted list}
+\begin{itemize}
+\item{bare\_jrnl.tex}
+\item{bare\_conf.tex}
+\item{bare\_jrnl\_compsoc.tex}
+\item{bare\_conf\_compsoc.tex}
+\item{bare\_jrnl\_comsoc.tex}
+\end{itemize}
+
+
+
+
+
+\subsection{Figures}
+Fig. 1 is an example of a floating figure using the graphicx package.
+ Note that $\backslash${\tt{label}} must occur AFTER (or within) $\backslash${\tt{caption}}.
+ For figures, $\backslash${\tt{caption}} should occur after the $\backslash${\tt{includegraphics}}.
+
+
+
+Fig. 2(a) and 2(b) is an example of a double column floating figure using two subfigures.
+ (The subfig.sty package must be loaded for this to work.)
+ The subfigure $\backslash${\tt{label}} commands are set within each subfloat command,
+ and the $\backslash${\tt{label}} for the overall figure must come after $\backslash${\tt{caption}}.
+ $\backslash${\tt{hfil}} is used as a separator to get equal spacing.
+ The combined width of all the parts of the figure should do not exceed the text width or a line break will occur.
+%
+\begin{figure*}[!t]
+\centering
+\subfloat[]{\includegraphics[width=2.5in]{fig1}%
+\label{fig_first_case}}
+\hfil
+\subfloat[]{\includegraphics[width=2.5in]{fig1}%
+\label{fig_second_case}}
+\caption{Dae. Ad quatur autat ut porepel itemoles dolor autem fuga. Bus quia con nessunti as remo di quatus non perum que nimus. (a) Case I. (b) Case II.}
+\label{fig_sim}
+\end{figure*}
+
+Note that often IEEE papers with multi-part figures do not place the labels within the image itself (using the optional argument to $\backslash${\tt{subfloat}}[]), but instead will
+ reference/describe all of them (a), (b), etc., within the main caption.
+ Be aware that for subfig.sty to generate the (a), (b), etc., subfigure
+ labels, the optional argument to $\backslash${\tt{subfloat}} must be present. If a
+ subcaption is not desired, leave its contents blank,
+ e.g.,$\backslash${\tt{subfloat}}[].
+
+
+ 
+
+\section{Tables}
+Note that, for IEEE-style tables, the
+ $\backslash${\tt{caption}} command should come BEFORE the table. Table captions use title case. Articles (a, an, the), coordinating conjunctions (and, but, for, or, nor), and most short prepositions are lowercase unless they are the first or last word. Table text will default to $\backslash${\tt{footnotesize}} as
+ the IEEE normally uses this smaller font for tables.
+ The $\backslash${\tt{label}} must come after $\backslash${\tt{caption}} as always.
+ 
+\begin{table}[!t]
+\caption{An Example of a Table\label{tab:table1}}
+\centering
+\begin{tabular}{|c||c|}
+\hline
+One & Two\\
+\hline
+Three & Four\\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Algorithms}
+Algorithms should be numbered and include a short title. They are set off from the text with rules above and below the title and after the last line.
+
+
+
+Que sunt eum lam eos si dic to estist, culluptium quid qui nestrum nobis reiumquiatur minimus minctem. Ro moluptat fuga. Itatquiam ut laborpo rersped exceres vollandi repudaerem. Ulparci sunt, qui doluptaquis sumquia ndestiu sapient iorepella sunti veribus. Ro moluptat fuga. Itatquiam ut laborpo rersped exceres vollandi repudaerem. 
+\section{Mathematical Typography \\ and Why It Matters}
+
+Typographical conventions for mathematical formulas have been developed to {\bf provide uniformity and clarity of presentation across mathematical texts}. This enables the readers of those texts to both understand the author's ideas and to grasp new concepts quickly. While software such as \LaTeX \ and MathType\textsuperscript{\textregistered} can produce aesthetically pleasing math when used properly, it is also very easy to misuse the software, potentially resulting in incorrect math display.
+
+IEEE aims to provide authors with the proper guidance on mathematical typesetting style and assist them in writing the best possible article. As such, IEEE has assembled a set of examples of good and bad mathematical typesetting \cite{ref1,ref2,ref3,ref4,ref5}. 
+
+Further examples can be found at \url{http://journals.ieeeauthorcenter.ieee.org/wp-content/uploads/sites/7/IEEE-Math-Typesetting-Guide-for-LaTeX-Users.pdf}
+
+\subsection{Display Equations}
+The simple display equation example shown below uses the ``equation'' environment. To number the equations, use the $\backslash${\tt{label}} macro to create an identifier for the equation. LaTeX will automatically number the equation for you.
+\begin{equation}
+\label{deqn_ex1}
+x = \sum_{i=0}^{n} 2{i} Q.
+\end{equation}
+
+\noindent is coded as follows:
+\begin{verbatim}
+\begin{equation}
+\label{deqn_ex1}
+x = \sum_{i=0}^{n} 2{i} Q.
+\end{equation}
+\end{verbatim}
+
+To reference this equation in the text use the $\backslash${\tt{ref}} macro. 
+Please see (\ref{deqn_ex1})\\
+\noindent is coded as follows:
+\begin{verbatim}
+Please see (\ref{deqn_ex1})\end{verbatim}
+
+\subsection{Equation Numbering}
+{\bf{Consecutive Numbering:}} Equations within an article are numbered consecutively from the beginning of the
+article to the end, i.e., (1), (2), (3), (4), (5), etc. Do not use roman numerals or section numbers for equation numbering.
+
+\noindent {\bf{Appendix Equations:}} The continuation of consecutively numbered equations is best in the Appendix, but numbering
+ as (A1), (A2), etc., is permissible.\\
+
+\noindent {\bf{Hyphens and Periods}}: Hyphens and periods should not be used in equation numbers, i.e., use (1a) rather than
+(1-a) and (2a) rather than (2.a) for subequations. This should be consistent throughout the article.
+
+\subsection{Multi-Line Equations and Alignment}
+Here we show several examples of multi-line equations and proper alignments.
+
+\noindent {\bf{A single equation that must break over multiple lines due to length with no specific alignment.}}
+\begin{multline}
+\text{The first line of this example}\\
+\text{The second line of this example}\\
+\text{The third line of this example}
+\end{multline}
+
+\noindent is coded as:
+\begin{verbatim}
+\begin{multline}
+\text{The first line of this example}\\
+\text{The second line of this example}\\
+\text{The third line of this example}
+\end{multline}
+\end{verbatim}
+
+\noindent {\bf{A single equation with multiple lines aligned at the = signs}}
+\begin{align}
+a &= c+d \\
+b &= e+f
+\end{align}
+\noindent is coded as:
+\begin{verbatim}
+\begin{align}
+a &= c+d \\
+b &= e+f
+\end{align}
+\end{verbatim}
+
+The {\tt{align}} environment can align on multiple  points as shown in the following example:
+\begin{align}
+x &= y & X & =Y & a &=bc\\
+x' &= y' & X' &=Y' &a' &=bz
+\end{align}
+\noindent is coded as:
+\begin{verbatim}
+\begin{align}
+x &= y & X & =Y & a &=bc\\
+x' &= y' & X' &=Y' &a' &=bz
+\end{align}
+\end{verbatim}
+
+
+
+
+
+\subsection{Subnumbering}
+The amsmath package provides a {\tt{subequations}} environment to facilitate subnumbering. An example:
+
+\begin{subequations}\label{eq:2}
+\begin{align}
+f&=g \label{eq:2A}\\
+f' &=g' \label{eq:2B}\\
+\mathcal{L}f &= \mathcal{L}g \label{eq:2c}
+\end{align}
+\end{subequations}
+
+\noindent is coded as:
+\begin{verbatim}
+\begin{subequations}\label{eq:2}
+\begin{align}
+f&=g \label{eq:2A}\\
+f' &=g' \label{eq:2B}\\
+\mathcal{L}f &= \mathcal{L}g \label{eq:2c}
+\end{align}
+\end{subequations}
+
+\end{verbatim}
+
+\subsection{Matrices}
+There are several useful matrix environments that can save you some keystrokes. See the example coding below and the output.
+
+\noindent {\bf{A simple matrix:}}
+\begin{equation}
+\begin{matrix}  0 &  1 \\ 
+1 &  0 \end{matrix}
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\begin{matrix}  0 &  1 \\ 
+1 &  0 \end{matrix}
+\end{equation}
+\end{verbatim}
+
+\noindent {\bf{A matrix with parenthesis}}
+\begin{equation}
+\begin{pmatrix} 0 & -i \\
+ i &  0 \end{pmatrix}
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\begin{pmatrix} 0 & -i \\
+ i &  0 \end{pmatrix}
+\end{equation}
+\end{verbatim}
+
+\noindent {\bf{A matrix with square brackets}}
+\begin{equation}
+\begin{bmatrix} 0 & -1 \\ 
+1 &  0 \end{bmatrix}
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\begin{bmatrix} 0 & -1 \\ 
+1 &  0 \end{bmatrix}
+\end{equation}
+\end{verbatim}
+
+\noindent {\bf{A matrix with curly braces}}
+\begin{equation}
+\begin{Bmatrix} 1 &  0 \\ 
+0 & -1 \end{Bmatrix}
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\begin{Bmatrix} 1 &  0 \\ 
+0 & -1 \end{Bmatrix}
+\end{equation}\end{verbatim}
+
+\noindent {\bf{A matrix with single verticals}}
+\begin{equation}
+\begin{vmatrix} a &  b \\ 
+c &  d \end{vmatrix}
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\begin{vmatrix} a &  b \\ 
+c &  d \end{vmatrix}
+\end{equation}\end{verbatim}
+
+\noindent {\bf{A matrix with double verticals}}
+\begin{equation}
+\begin{Vmatrix} i &  0 \\ 
+0 & -i \end{Vmatrix}
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\begin{Vmatrix} i &  0 \\ 
+0 & -i \end{Vmatrix}
+\end{equation}\end{verbatim}
+
+\subsection{Arrays}
+The {\tt{array}} environment allows you some options for matrix-like equations. You will have to manually key the fences, but there are other options for alignment of the columns and for setting horizontal and vertical rules. The argument to {\tt{array}} controls alignment and placement of vertical rules.
+
+A simple array
+\begin{equation}
+\left(
+\begin{array}{cccc}
+a+b+c & uv & x-y & 27\\
+a+b & u+v & z & 134
+\end{array}\right)
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\left(
+\begin{array}{cccc}
+a+b+c & uv & x-y & 27\\
+a+b & u+v & z & 134
+\end{array} \right)
+\end{equation}
+\end{verbatim}
+
+A slight variation on this to better align the numbers in the last column
+\begin{equation}
+\left(
+\begin{array}{cccr}
+a+b+c & uv & x-y & 27\\
+a+b & u+v & z & 134
+\end{array}\right)
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\left(
+\begin{array}{cccr}
+a+b+c & uv & x-y & 27\\
+a+b & u+v & z & 134
+\end{array} \right)
+\end{equation}
+\end{verbatim}
+
+An array with vertical and horizontal rules
+\begin{equation}
+\left( \begin{array}{c|c|c|r}
+a+b+c & uv & x-y & 27\\ \hline
+a+b & u+v & z & 134
+\end{array}\right)
+\end{equation}
+is coded as:
+\begin{verbatim}
+\begin{equation}
+\left(
+\begin{array}{c|c|c|r}
+a+b+c & uv & x-y & 27\\
+a+b & u+v & z & 134
+\end{array} \right)
+\end{equation}
+\end{verbatim}
+Note the argument now has the pipe "$\vert$" included to indicate the placement of the vertical rules.
+
+
+\subsection{Cases Structures}
+Many times cases can be miscoded using the wrong environment, i.e., {\tt{array}}. Using the {\tt{cases}} environment will save keystrokes (from not having to type the $\backslash${\tt{left}}$\backslash${\tt{lbrace}}) and automatically provide the correct column alignment.
+\begin{equation*}
+{z_m(t)} = \begin{cases}
+1,&{\text{if}}\ {\beta }_m(t) \\ 
+{0,}&{\text{otherwise.}} 
+\end{cases}
+\end{equation*}
+\noindent is coded as follows:
+\begin{verbatim}
+\begin{equation*}
+{z_m(t)} = 
+\begin{cases}
+1,&{\text{if}}\ {\beta }_m(t),\\ 
+{0,}&{\text{otherwise.}} 
+\end{cases}
+\end{equation*}
+\end{verbatim}
+\noindent Note that the ``\&'' is used to mark the tabular alignment. This is important to get  proper column alignment. Do not use $\backslash${\tt{quad}} or other fixed spaces to try and align the columns. Also, note the use of the $\backslash${\tt{text}} macro for text elements such as ``if'' and ``otherwise.''
+
+\subsection{Function Formatting in Equations}
+Often, there is an easy way to properly format most common functions. Use of the $\backslash$ in front of the function name will in most cases, provide the correct formatting. When this does not work, the following example provides a solution using the $\backslash${\tt{text}} macro:
+
+\begin{equation*} 
+  d_{R}^{KM} = \underset {d_{l}^{KM}} {\text{arg min}} \{ d_{1}^{KM},\ldots,d_{6}^{KM}\}.
+\end{equation*}
+
+\noindent is coded as follows:
+\begin{verbatim}
+\begin{equation*} 
+ d_{R}^{KM} = \underset {d_{l}^{KM}} 
+ {\text{arg min}} \{ d_{1}^{KM},
+ \ldots,d_{6}^{KM}\}.
+\end{equation*}
+\end{verbatim}
+
+\subsection{ Text Acronyms Inside Equations}
+This example shows where the acronym ``MSE" is coded using $\backslash${\tt{text\{\}}} to match how it appears in the text.
+
+\begin{equation*}
+ \text{MSE} = \frac {1}{n}\sum _{i=1}^{n}(Y_{i} - \hat {Y_{i}})^{2}
+\end{equation*}
+
+\begin{verbatim}
+\begin{equation*}
+ \text{MSE} = \frac {1}{n}\sum _{i=1}^{n}
+(Y_{i} - \hat {Y_{i}})^{2}
+\end{equation*}
+\end{verbatim}
+
+\section{Conclusion}
+The conclusion goes here.
+
+
+\section*{Acknowledgments}
+This should be a simple paragraph before the References to thank those individuals and institutions who have supported your work on this article.
+
+
+
+{\appendix[Proof of the Zonklar Equations]
+Use $\backslash${\tt{appendix}} if you have a single appendix:
+Do not use $\backslash${\tt{section}} anymore after $\backslash${\tt{appendix}}, only $\backslash${\tt{section*}}.
+If you have multiple appendixes use $\backslash${\tt{appendices}} then use $\backslash${\tt{section}} to start each appendix.
+You must declare a $\backslash${\tt{section}} before using any $\backslash${\tt{subsection}} or using $\backslash${\tt{label}} ($\backslash${\tt{appendices}} by itself
+ starts a section numbered zero.)}
+
+
+
+%{\appendices
+%\section*{Proof of the First Zonklar Equation}
+%Appendix one text goes here.
+% You can choose not to have a title for an appendix if you want by leaving the argument blank
+%\section*{Proof of the Second Zonklar Equation}
+%Appendix two text goes here.}
+
+
+
+\section{References Section}
+You can use a bibliography generated by BibTeX as a .bbl file.
+ BibTeX documentation can be easily obtained at:
+ http://mirror.ctan.org/biblio/bibtex/contrib/doc/
+ The IEEEtran BibTeX style support page is:
+ http://www.michaelshell.org/tex/ieeetran/bibtex/
+ 
+ % argument is your BibTeX string definitions and bibliography database(s)
+%\bibliography{IEEEabrv,../bib/paper}
+%
+\section{Simple References}
+You can manually copy in the resultant .bbl file and set second argument of $\backslash${\tt{begin}} to the number of references
+ (used to reserve space for the reference number labels box).
+
+\bibliographystyle{IEEEtran}
+\bibliography{sampleBibFile}
+
+\newpage
+
+\section{Biography Section}
+If you have an EPS/PDF photo (graphicx package needed), extra braces are
+ needed around the contents of the optional argument to biography to prevent
+ the LaTeX parser from getting confused when it sees the complicated
+ $\backslash${\tt{includegraphics}} command within an optional argument. (You can create
+ your own custom macro containing the $\backslash${\tt{includegraphics}} command to make things
+ simpler here.)
+ 
+\vspace{11pt}
+
+\bf{If you include a photo:}\vspace{-33pt}
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{fig1}}]{Michael Shell}
+Use $\backslash${\tt{begin\{IEEEbiography\}}} and then for the 1st argument use $\backslash${\tt{includegraphics}} to declare and link the author photo.
+Use the author name as the 3rd argument followed by the biography text.
+\end{IEEEbiography}
+
+\vspace{11pt}
+
+\bf{If you will not include a photo:}\vspace{-33pt}
+\begin{IEEEbiographynophoto}{John Doe}
+Use $\backslash${\tt{begin\{IEEEbiographynophoto\}}} and the author name as the argument followed by the biography text.
+\end{IEEEbiographynophoto}
+
+
+
+
+\vfill
+
+\end{document}
+
+
